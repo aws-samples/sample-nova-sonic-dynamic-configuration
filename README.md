@@ -4,8 +4,8 @@ A speech-to-speech dynamic configuration approch for multi-agent system using AW
 
 ## Demo
 
-![](assets/agent%20switch%20example.mp4)
-
+[![]()
+](https://github.com/user-attachments/assets/ea1a1e40-78a3-4761-b00c-073953460e25)
 ## The Problem
 
 Speech-to-speech models have static configuration - once a conversation starts, you're locked into a single system prompt, one set of tools, and fixed voice characteristics. When different use cases need different configurations, a single generalist agent can't deliver the precision of specialized agents.
