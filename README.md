@@ -112,7 +112,7 @@ python main.py --debug
 
 - Python 3.12+
 - AWS Bedrock access with Nova 2 Sonic enabled
-- Microphone and speakers
+- Microphone and speakers (headphones recommended to prevent the model from hearing its own audio output)
 - portaudio (for PyAudio)
 
 ## Agent Switching Flow
