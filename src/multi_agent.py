@@ -10,7 +10,7 @@ from src.connection.bedrock_connection import BedrockConnection
 from src.session.session_controller import SessionController
 from src.audio.audio_streamer import AudioStreamer
 from src.agents.agent_config import AGENTS
-from src import tui
+from src import display
 
 
 logger = logging.getLogger("sonic.orchestrator")
@@ -31,10 +31,10 @@ class MultiAgentSonic:
         """Start voice conversation with agent switching."""
         while True:
             try:
-                agent = AGENTS.get(self.state.active_agent, AGENTS["support"])
+                agent = AGENTS.get(self.state.active_agent, AGENTS["customer_support"])
                 logger.info("Starting session with agent=%s, voice=%s",
                             self.state.active_agent, agent.voice_id)
-                tui.show_agent_start(self.state.active_agent)
+                display.show_agent_start(self.state.active_agent)
 
                 await asyncio.sleep(0.1)
 
@@ -67,7 +67,7 @@ class MultiAgentSonic:
                     old = self.state.active_agent
                     new = self.state.complete_switch()
                     logger.info("Agent switch: %s → %s", old, new)
-                    tui.show_agent_switch(old, new)
+                    display.show_agent_switch(old, new)
 
                     # Play transition music
                     self._play_music()
@@ -77,15 +77,15 @@ class MultiAgentSonic:
                     await audio_streamer.stop_streaming()
                     continue
                 else:
-                    tui.show_conversation_ended()
+                    display.show_conversation_ended()
                     break
 
             except KeyboardInterrupt:
-                tui.show_interrupted()
+                display.show_interrupted()
                 break
             except Exception as e:
                 logger.exception("Session error")
-                tui.show_error(str(e))
+                display.show_error(str(e))
                 if self.debug:
                     import traceback
                     traceback.print_exc()
@@ -99,14 +99,14 @@ class MultiAgentSonic:
             if os.path.exists(music_path):
                 pygame.mixer.music.load(music_path)
                 pygame.mixer.music.play(-1)
-                tui.show_music_playing()
+                display.show_music_playing()
         except Exception as e:
-            tui.show_error(f"Could not play music: {e}")
+            display.show_error(f"Could not play music: {e}")
 
     def _stop_music(self):
         """Stop transition music."""
         try:
             pygame.mixer.music.stop()
-            tui.show_music_stopped()
+            display.show_music_stopped()
         except:
             pass

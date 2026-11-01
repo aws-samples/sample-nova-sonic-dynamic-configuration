@@ -4,7 +4,7 @@ from typing import Callable, Awaitable, Optional
 import pyaudio
 from src.config import INPUT_SAMPLE_RATE, OUTPUT_SAMPLE_RATE, CHANNELS, CHUNK_SIZE
 from src.utils import debug_print, time_it, time_it_async
-from src import tui
+from src import display
 
 
 FORMAT = pyaudio.paInt16
@@ -115,7 +115,7 @@ class AudioStreamer:
                 continue
             except Exception as e:
                 if self.is_streaming:
-                    tui.show_error(f"Playing output: {e}")
+                    display.show_error(f"Playing output: {e}")
                 await asyncio.sleep(0.05)
 
     async def start_streaming(self):
@@ -132,7 +132,7 @@ class AudioStreamer:
                 self._send_audio_content_start,
             )
 
-        tui.show_streaming_started()
+        display.show_streaming_started()
 
         if not self.input_stream.is_active():
             self.input_stream.start_stream()
@@ -141,7 +141,7 @@ class AudioStreamer:
 
         # Wait for stop event (set by on_switch_requested) instead of polling
         await self._stop_event.wait()
-        tui.show_switch_detected()
+        display.show_switch_detected()
         self.is_streaming = False
 
         await self.stop_streaming()

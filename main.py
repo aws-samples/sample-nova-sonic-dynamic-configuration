@@ -6,7 +6,7 @@ import logging
 from src.multi_agent import MultiAgentSonic
 from src.config import DEFAULT_MODEL_ID, DEFAULT_REGION
 from src import config
-from src import tui
+from src import display
 
 
 def setup_logging(debug: bool = False) -> None:
@@ -29,7 +29,7 @@ def setup_logging(debug: bool = False) -> None:
 async def main(debug: bool = False):
     """Run multi-agent conversation."""
     config.DEBUG = debug
-    tui.show_banner()
+    display.show_banner()
 
     sonic = MultiAgentSonic(
         model_id=DEFAULT_MODEL_ID,
@@ -50,9 +50,9 @@ if __name__ == "__main__":
     try:
         asyncio.run(main(debug=args.debug))
     except KeyboardInterrupt:
-        tui.show_goodbye()
+        display.show_goodbye()
     except Exception as e:
-        tui.show_error(str(e))
+        display.show_error(str(e))
         if args.debug:
             import traceback
             traceback.print_exc()

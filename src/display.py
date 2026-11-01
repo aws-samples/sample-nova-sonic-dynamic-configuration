@@ -24,9 +24,9 @@ _SKY = "#87ceeb"
 
 # Agent color themes
 AGENT_THEMES = {
-    "support": {"color": _CLOUD, "icon": "\u2692", "label": "Support"},
-    "sales": {"color": _CLOUD, "icon": "\u2696", "label": "Sales"},
-    "tracking": {"color": _CLOUD, "icon": "\u2690", "label": "Tracking"},
+    "customer_support": {"color": _CLOUD, "icon": "\u2692", "label": "Support"},
+    "banking_services": {"color": _CLOUD, "icon": "\u2696", "label": "Banking"},
+    "transactions": {"color": _CLOUD, "icon": "\u2690", "label": "Transactions"},
 }
 
 # Track last speaker to draw boundaries between turns

@@ -7,7 +7,7 @@ from typing import Dict, List, Optional
 class ConversationState:
     """Owns conversation history, active agent, and switch state."""
 
-    active_agent: str = "support"
+    active_agent: str = "customer_support"
     conversation_history: List[Dict[str, str]] = field(default_factory=list)
     switch_requested: bool = False
     switch_target: Optional[str] = None

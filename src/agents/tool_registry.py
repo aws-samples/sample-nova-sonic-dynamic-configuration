@@ -12,41 +12,39 @@ class ToolEntry(NamedTuple):
     schema: Dict[str, Any]
 
 
-# Hardcoded switch_agent schema — always included for every agent.
-SWITCH_AGENT_SCHEMA: Dict[str, Any] = {
-    "toolSpec": {
-        "name": "switch_agent",
-        "description": (
-            "CRITICAL: Invoke this function IMMEDIATELY when user requests to switch personas, "
-            "speak with another department, or needs a different type of assistance. "
-            "This transfers the conversation to a specialized agent with appropriate tools and expertise. "
-            "Available agents: 'support' (technical issues, complaints, problems - creates support tickets), "
-            "'sales' (purchasing, pricing, product info - processes orders), "
-            "'tracking' (order status, delivery updates - checks shipment location). "
-            "Example inputs - Sales requests: 'Can I buy a computer?', 'How much does a laptop cost?', "
-            "'I want to purchase a desktop', 'What products do you sell?', 'I'd like to place an order'. "
-            "Support requests: 'I have issues with my wifi', 'My computer won't turn on', "
-            "'I need help with a problem', 'Something is broken', 'I want to file a complaint'. "
-            "Tracking requests: 'What's my order status?', 'Where is my delivery?', "
-            "'When will my order arrive?', 'Can you track my package?', 'Has my order shipped yet?'. "
-            "Direct transfer requests: 'Let me speak with sales', 'Transfer me to support', "
-            "'I need to talk to tracking'."
-        ),
-        "inputSchema": {
-            "json": json.dumps({
-                "type": "object",
-                "properties": {
-                    "role": {
-                        "type": "string",
-                        "enum": ["support", "sales", "tracking"],
-                        "default": "support",
-                    }
-                },
-                "required": ["role"],
-            })
-        },
-    }
+# Teams the caller can be transferred to, described for the switch_agent role parameter.
+SWITCH_AGENT_ROLES: Dict[str, str] = {
+    "customer_support": "account problems, complaints, frequently asked questions, support tickets",
+    "banking_services": "credit cards, loans, savings and checking accounts, eligibility",
+    "transactions": "transaction history, disputes, spending insights",
 }
+
+
+def build_switch_agent_schema(current_agent: str) -> Dict[str, Any]:
+    """Build the switch_agent schema, offering only teams other than the current agent."""
+    roles = {name: desc for name, desc in SWITCH_AGENT_ROLES.items() if name != current_agent}
+    return {
+        "toolSpec": {
+            "name": "switch_agent",
+            "description": (
+                "Transfers the caller to another team, after the caller has agreed to the transfer. "
+                "The new team continues the conversation with the full history."
+            ),
+            "inputSchema": {
+                "json": json.dumps({
+                    "type": "object",
+                    "properties": {
+                        "role": {
+                            "type": "string",
+                            "enum": list(roles),
+                            "description": " ".join(f"{name}: {desc}." for name, desc in roles.items()),
+                        }
+                    },
+                    "required": ["role"],
+                })
+            },
+        }
+    }
 
 
 class ToolRegistry:
@@ -64,7 +62,7 @@ class ToolRegistry:
         self, agent_name: str, agents: Dict[str, Agent]
     ) -> List[Dict[str, Any]]:
         """Return Bedrock-compatible tool schema list for an agent, including switch_agent."""
-        schemas: List[Dict[str, Any]] = [SWITCH_AGENT_SCHEMA]
+        schemas: List[Dict[str, Any]] = [build_switch_agent_schema(agent_name)]
 
         tool_names = self._agent_tool_names.get(agent_name, [])
         for name in tool_names:

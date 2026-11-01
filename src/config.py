@@ -7,13 +7,13 @@ CHANNELS = 1
 CHUNK_SIZE = 1024
 
 # AWS Configuration
-DEFAULT_MODEL_ID = 'amazon.nova-2-sonic-v1:0'
+DEFAULT_MODEL_ID = 'amazon.nova-2-5-sonic'
 DEFAULT_REGION = 'us-east-1'
 
 # Model Configuration
 MAX_TOKENS = 10000
-TOP_P = 0.0
-TEMPERATURE = 0.2
+TOP_P = 0.1
+TEMPERATURE = 0.1
 
 # Debug
 DEBUG = False

@@ -32,7 +32,7 @@ from src.connection.response_parser import ResponseParser
 from src.connection.event_templates import EventTemplates
 from src.utils import debug_print
 from src.agents.agent_config import AGENTS
-from src import tui
+from src import display
 
 logger = logging.getLogger("sonic.session")
 
@@ -210,7 +210,7 @@ class SessionController:
         # Send conversation history
         history = self._state.get_history()
         if history:
-            tui.show_history_loaded(len(history))
+            display.show_history_loaded(len(history))
             debug_print(f"Sending history: {len(history)} messages")
             # Drop last message and leading assistant messages (matches original behaviour)
             history = history[:-1]
@@ -255,7 +255,7 @@ class SessionController:
         ]
         for event in events:
             await self._connection.send(event)
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)
 
     # ------------------------------------------------------------------
     # Response processing loop
@@ -333,7 +333,7 @@ class SessionController:
         if (self._role == "ASSISTANT" and self._display_assistant_text) or self._role == "USER":
             self._state.append_message(role, content)
         if (self._role == "ASSISTANT" and not self._display_assistant_text) or self._role == "USER":
-            tui.show_text_output(role, content)
+            display.show_text_output(role, content)
 
     def _handle_audio_output(self, event: AudioOutputEvent) -> None:
         """Decode base64 audio and push to callback."""
@@ -357,14 +357,17 @@ class SessionController:
         }
 
         if event.tool_name == "switch_agent":
-            target = event.content.get("role", "support").lower()
+            target = event.content.get("role", "customer_support").lower()
+            if target == self._state.active_agent:
+                logger.info("Ignoring no-op switch to current agent: %s", target)
+                return
             logger.info("Agent switch requested → %s", target)
             self._state.request_switch(target)
             await asyncio.sleep(0.1)
             self._callback.on_switch_requested()
         else:
             logger.info("Tool invoked: %s (id=%s)", event.tool_name, event.tool_use_id)
-            tui.show_tool_use(event.tool_name)
+            display.show_tool_use(event.tool_name)
             debug_print(f"Tool: {event.tool_name}, ID: {event.tool_use_id}")
 
     def _handle_content_end(self, event: ContentEndEvent) -> None:
@@ -414,7 +417,17 @@ class SessionController:
         """Execute a tool via ToolRegistry and send the result back to Bedrock."""
         try:
             debug_print(f"Executing tool: {tool_name}")
-            result = await self._registry.execute(tool_name, tool_content)
+            if tool_name == "switch_agent":
+                # A real switch ends the session before its tool result is due;
+                # reaching here means the model asked for the agent already active.
+                if self._state.switch_requested:
+                    return
+                result = {
+                    "status": "already_connected",
+                    "next": "The caller is already with your team. Continue helping them directly.",
+                }
+            else:
+                result = await self._registry.execute(tool_name, tool_content)
 
             await self._connection.send(
                 EventTemplates.tool_content_start(
